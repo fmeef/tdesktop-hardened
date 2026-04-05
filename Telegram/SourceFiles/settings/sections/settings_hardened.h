@@ -8,3 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #pragma once
 
 #include "settings/settings_common.h"
+
+namespace Settings {
+
+}
