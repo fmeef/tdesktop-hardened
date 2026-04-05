@@ -74,6 +74,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "mainwindow.h"
 #include "window/window_controller.h"
 #include "window/window_session_controller.h"
+#include "settings/sections/settings_hardened.h"
 
 namespace Core::DeepLinks {
 namespace {
@@ -152,6 +153,20 @@ Result ShowPeerColorBox(
 		std::shared_ptr<Ui::ChatTheme>(),
 		tab));
 	return Result::Handled;
+}
+
+Result ShowHardenedBox(
+        const Context &ctx,
+        Hardened::Flags highlightFlags = Hardened::Flags()) {
+    if (!ctx.controller) {
+        return Result::NeedsAuth;
+    }
+    
+    ctx.controller->show(
+        Box(::Settings::HardenedBox, highlightFlags),
+        Ui::LayerOption::KeepOther,
+        anim::type::normal);
+    return Result::Handled;
 }
 
 Result HandleQrCode(const Context &ctx, bool highlightCopy) {
@@ -563,6 +578,13 @@ void RegisterSettingsHandlers(Router &router) {
 			u"websites/disconnect-all"_q,
 		},
 	});
+    
+    router.add(u"settings"_q, {
+        .path = u"hardened"_q,
+        .action = CodeBlock{ [](const Context &ctx) {
+            return ShowHardenedBox(ctx);
+        }},
+    });
 
 	const auto openPasscode = [](const Context &ctx, const QString &highlight) {
 		if (!ctx.controller) {

@@ -684,6 +684,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_settings_experimental_restore" = "Restore default values";
 "lng_settings_experimental_irrelevant" = "This option isn't relevant for your system.";
 
+"lng_settings_section_hardened" = "Hardened";
+"lng_setttings_hardened_menu" = "hardened";
+
 "lng_settings_section_chat_settings" = "Chat Settings";
 "lng_settings_replace_emojis" = "Replace emoji automatically";
 "lng_settings_system_text_replace" = "System text replacements";

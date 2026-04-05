@@ -797,3 +797,12 @@ detailedSettingsButtonStyle: DetailedSettingsButtonStyle {
 
 settingsToastStarIcon: icon {{ "toast/star", toastFg }};
 
+hardenedButton: SettingsButton(settingsButton) {
+    style: boxTextStyle;
+    padding: margins(57px, 8px, 22px, 8px);
+    iconLeft: 20px;
+}
+
+hardenedButtonNoIcon: SettingsButton(powerSavingButton) {
+    padding: margins(22px, 8px, 22px, 8px);
+}

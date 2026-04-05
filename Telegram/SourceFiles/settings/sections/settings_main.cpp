@@ -394,6 +394,14 @@ void BuildSectionButtons(SectionBuilder &builder) {
 		.icon = { &st::menuIconChatBubble },
 		.keywords = { u"themes"_q, u"appearance"_q, u"stickers"_q },
 	});
+    
+    
+    builder.addSectionButton({
+        .title = tr::lng_settings_section_hardened(),
+        .targetSection = ChatId(),
+        .icon = { &st::menuIconLock},
+        .keywords = { u"hardened"_q }
+    });
 
 	{ // Folders
 		const auto preload = [=] {
