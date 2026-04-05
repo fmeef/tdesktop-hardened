@@ -155,19 +155,19 @@ Result ShowPeerColorBox(
 	return Result::Handled;
 }
 
-Result ShowHardenedBox(
-        const Context &ctx,
-        Hardened::Flags highlightFlags = Hardened::Flags()) {
-    if (!ctx.controller) {
-        return Result::NeedsAuth;
-    }
-    
-    ctx.controller->show(
-        Box(::Settings::HardenedBox, highlightFlags),
-        Ui::LayerOption::KeepOther,
-        anim::type::normal);
-    return Result::Handled;
-}
+//Result ShowHardenedBox(
+//        const Context &ctx,
+//        Hardened::Flags highlightFlags = Hardened::Flags()) {
+//    if (!ctx.controller) {
+//        return Result::NeedsAuth;
+//    }
+//    
+//    ctx.controller->show(
+//        Box(::Settings::HardenedBox, highlightFlags),
+//        Ui::LayerOption::KeepOther,
+//        anim::type::normal);
+//    return Result::Handled;
+//}
 
 Result HandleQrCode(const Context &ctx, bool highlightCopy) {
 	if (!ctx.controller) {
@@ -579,12 +579,12 @@ void RegisterSettingsHandlers(Router &router) {
 		},
 	});
     
-    router.add(u"settings"_q, {
-        .path = u"hardened"_q,
-        .action = CodeBlock{ [](const Context &ctx) {
-            return ShowHardenedBox(ctx);
-        }},
-    });
+//    router.add(u"settings"_q, {
+//        .path = u"hardened"_q,
+//        .action = CodeBlock{ [](const Context &ctx) {
+//            return ShowHardenedBox(ctx);
+//        }},
+//    });
 
 	const auto openPasscode = [](const Context &ctx, const QString &highlight) {
 		if (!ctx.controller) {
