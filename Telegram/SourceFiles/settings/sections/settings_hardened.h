@@ -11,4 +11,5 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 namespace Settings {
 
+Type HardenedId();
 }

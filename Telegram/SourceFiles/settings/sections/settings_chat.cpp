@@ -2730,7 +2730,7 @@ void SetupThemeSettings(
 			return enabled
 				? tr::lng_settings_auto_night_mode_on()
 				: tr::lng_settings_auto_night_mode_off();
-		}) | rpl::flatten_latest();
+		}) | rpl::flatten_latest() ;
 		const auto button = AddButtonWithLabel(
 			container,
 			tr::lng_settings_auto_night_mode(),
