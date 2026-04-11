@@ -52,7 +52,7 @@ void BuildHardenedSectionContent(SectionBuilder &builder) {
     
     if (animated) {
         animated->checkedChanges() | rpl::filter([=](bool checked) {
-            return (!settings->hideAnimatedStickers() == checked);
+            return (settings->hideAnimatedStickers() == checked);
         })
         | rpl::on_next([=](bool checked) {
             settings->setHideAnimatedStickers(!checked);
