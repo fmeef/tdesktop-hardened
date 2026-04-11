@@ -1040,6 +1040,12 @@ public:
 	}
 
 	void resetOnLastLogout();
+    
+    void setHideAnimatedStickers(bool value);
+    
+    bool hideAnimatedStickers() const;
+    
+    rpl::producer<bool> hideAnimatedStickersValue() const;
 
 private:
 	void resolveRecentEmoji() const;
@@ -1203,6 +1209,8 @@ private:
 	ushort _notificationsVolume = 100;
 
 	QByteArray _photoEditorBrush;
+    
+    rpl::variable<bool> _hideAnimatedStickers = false;
 
 };
 

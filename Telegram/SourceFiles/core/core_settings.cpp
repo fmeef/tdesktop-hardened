@@ -266,7 +266,7 @@ QByteArray Settings::serialize() const {
 			+ Serialize::bytearraySize(value);
 	}
 	size += sizeof(qint32); // _audioPlaybackSpeed
-
+    size += sizeof(qint32); // _hideAnimatedStickers
 	auto result = QByteArray();
 	result.reserve(size);
 	{
@@ -440,6 +440,7 @@ QByteArray Settings::serialize() const {
 			stream << key << value;
 		}
 		stream << qint32(SerializePlaybackSpeed(_audioPlaybackSpeed.current()));
+        stream << quint32(_hideAnimatedStickers.current() ? 1 : 0);
 	}
 
 	Ensures(result.size() == size);
@@ -580,6 +581,7 @@ void Settings::addFromSerialized(const QByteArray &serialized) {
 		: 0;
 	qint32 usePlatformTranslation = _usePlatformTranslation ? 1 : 0;
 	qint32 systemTextReplace = _systemTextReplace.current() ? 1 : 0;
+    qint32 hideAnimatedStickers = _hideAnimatedStickers.current() ? 1 : 0;
 
 	stream >> themesAccentColors;
 	if (!stream.atEnd()) {
@@ -954,6 +956,11 @@ void Settings::addFromSerialized(const QByteArray &serialized) {
 			audioPlaybackSpeed = speed;
 		}
 	}
+    
+    if (!stream.atEnd()) {
+        stream >> hideAnimatedStickers;
+    }
+    
 	if (stream.status() != QDataStream::Ok) {
 		LOG(("App Error: "
 			"Bad data for Core::Settings::constructFromSerialized()"));
@@ -1191,6 +1198,7 @@ void Settings::addFromSerialized(const QByteArray &serialized) {
 	_chatFiltersHorizontal = (chatFiltersHorizontal == 1);
 	_quickDialogAction = Dialogs::Ui::QuickDialogAction(quickDialogAction);
 	_notificationsVolume = notificationsVolume;
+    _hideAnimatedStickers = (hideAnimatedStickers == 1);
 }
 
 void Settings::clearPref(std::string_view key) {
@@ -1847,6 +1855,18 @@ Dialogs::Ui::QuickDialogAction Settings::quickDialogAction() const {
 
 void Settings::setQuickDialogAction(Dialogs::Ui::QuickDialogAction action) {
 	_quickDialogAction = action;
+}
+
+bool Settings::hideAnimatedStickers() const {
+    return _hideAnimatedStickers.current();
+}
+
+rpl::producer<bool> Settings::hideAnimatedStickersValue() const {
+    return _hideAnimatedStickers.value();
+}
+
+void Settings::setHideAnimatedStickers(bool value) {
+    _hideAnimatedStickers = value;
 }
 
 } // namespace Core

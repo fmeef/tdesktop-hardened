@@ -20,7 +20,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "window/themes/window_theme_editor_box.h"
 #include "ui/widgets/menu/menu_add_action_callback.h"
 #include "ui/wrap/vertical_layout.h"
+#include "core/core_settings.h"
+#include "core/application.h"
 #include "ui/ui_utility.h"
+#include "ui/widgets/checkbox.h"
 #include "ui/vertical_list.h"
 
 
@@ -29,36 +32,33 @@ namespace Settings {
 namespace {
 using namespace Builder;
 
-
-
-void SetupAllHardened(not_null<Window::SessionController*> controller, not_null<Ui::VerticalLayout*> container) {
-    Ui::AddSkip(container);
-    const auto title = Ui::AddSubsectionTitle(
-        container,
-        tr::lng_settings_section_hardened());
-    
-    
-    const auto session = &controller->session();
-    
-    auto wrap = object_ptr<Ui::VerticalLayout>(container);
-    const auto inner = wrap.data();
-}
-
-
 void BuildHardenedSectionContent(SectionBuilder &builder) {
     const auto controller = builder.controller();
     const auto session = builder.session();
-    builder.add([controller](const WidgetContext &ctx) {
-        SetupAllHardened(controller, ctx.container.get());
-        return SectionBuilder::WidgetToAdd{};
-    }, [] {
-        return SearchEntry{
-            .id = u"hardened/main"_q,
-            .title = tr::lng_settings_section_hardened(tr::now),
-            .keywords = { u"hardened"_q },
-            .icon = { &st::menuIconLock }
-        };
+    const auto settings = &Core::App().settings();
+    builder.addDivider();
+    builder.addSkip();
+    builder.addSubsectionTitle({
+        .id = u"hardened/main"_q,
+        .title = tr::lng_settings_section_hardened(),
+        .keywords = { u"hardened"_q },
     });
+    const auto animated = builder.addCheckbox({
+        .id = u"hardened/show_animated_stickers"_q,
+        .title = tr::lng_settings_hardened_anim_stickers(),
+        .checked = !settings->hideAnimatedStickers(),
+        .keywords = { u"animated"_q }
+    });
+    
+    if (animated) {
+        animated->checkedChanges() | rpl::filter([=](bool checked) {
+            return (!settings->hideAnimatedStickers() == checked);
+        })
+        | rpl::on_next([=](bool checked) {
+            settings->setHideAnimatedStickers(!checked);
+            Core::App().saveSettingsDelayed();
+        }, animated->lifetime());
+    }
 }
 
 

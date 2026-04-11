@@ -684,9 +684,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_settings_experimental_restore" = "Restore default values";
 "lng_settings_experimental_irrelevant" = "This option isn't relevant for your system.";
 
-"lng_settings_section_hardened" = "Hardened";
-"lng_setttings_hardened_menu" = "hardened";
-
 "lng_settings_section_chat_settings" = "Chat Settings";
 "lng_settings_replace_emojis" = "Replace emoji automatically";
 "lng_settings_system_text_replace" = "System text replacements";
@@ -7970,5 +7967,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_sr_country_column_name" = "Country name";
 "lng_sr_languages_column_native" = "Native name";
 "lng_sr_languages_column_name" = "Language name";
+
+
+"lng_settings_section_hardened" = "Hardened";
+"lng_setttings_hardened_menu" = "hardened";
+"lng_settings_hardened_anim_stickers" = "Show animated stickers";
 
 // Keys finished
