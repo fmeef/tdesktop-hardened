@@ -242,6 +242,12 @@ void Sticker::draw(
 	if (!customEmojiPart()) {
 		_parent->clearCustomEmojiRepaint();
 	}
+    
+    if ((_data->sticker()->isAnimated() ||
+        _data->sticker()->isLottie()) && Core::App().settings().hideAnimatedStickers()) {
+        paintSensitiveTag(p, context, r);
+        return;
+    }
 
 	ensureDataMediaCreated();
 	if (readyToDrawAnimationFrame()) {
