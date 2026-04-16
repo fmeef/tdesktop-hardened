@@ -40,7 +40,7 @@ void BuildHardenedSectionContent(SectionBuilder &builder) {
     builder.addSkip();
     builder.addSubsectionTitle({
         .id = u"hardened/main"_q,
-        .title = tr::lng_settings_section_hardened(),
+        .title = tr::lng_settings_section_lottie(),
         .keywords = { u"hardened"_q },
     });
     const auto animated = builder.addCheckbox({
@@ -77,7 +77,7 @@ private:
 const auto kMeta = BuildHelper({
     .id = Hardened::Id(),
     .parentId = MainId(),
-    .title = &tr::lng_settings_section_hardened,
+    .title = &tr::lng_settings_hardened_menu,
     .icon = &st::menuIconLock,
 }, [] (SectionBuilder &builder) {
     BuildHardenedSectionContent(builder);
@@ -86,7 +86,7 @@ const auto kMeta = BuildHelper({
 const SectionBuildMethod kHardenedSection = kMeta.build;
 
 rpl::producer<QString> Hardened::title() {
-    return tr::lng_settings_section_hardened();
+    return tr::lng_settings_hardened_menu();
 }
 
 void Hardened::setupContent() {

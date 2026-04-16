@@ -7969,8 +7969,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_sr_languages_column_name" = "Language name";
 
 
-"lng_settings_section_hardened" = "Hardened";
-"lng_setttings_hardened_menu" = "hardened";
+"lng_settings_section_lottie" = "Lottie Animations";
+"lng_settings_hardened_menu" = "Hardened";
 "lng_settings_hardened_anim_stickers" = "Show animated stickers";
 
 // Keys finished

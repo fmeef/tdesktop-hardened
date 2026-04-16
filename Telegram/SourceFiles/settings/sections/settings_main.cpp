@@ -376,7 +376,7 @@ void BuildSectionButtons(SectionBuilder &builder) {
 	}
     
     builder.addSectionButton({
-        .title = tr::lng_settings_section_hardened(),
+        .title = tr::lng_settings_hardened_menu(),
         .targetSection = HardenedId(),
         .icon = { &st::menuIconLock },
         .keywords = { u"hardened"_q}
