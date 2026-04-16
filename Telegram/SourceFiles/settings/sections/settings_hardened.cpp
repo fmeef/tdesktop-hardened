@@ -47,7 +47,7 @@ void BuildHardenedSectionContent(SectionBuilder &builder) {
         .id = u"hardened/show_animated_stickers"_q,
         .title = tr::lng_settings_hardened_anim_stickers(),
         .checked = !settings->hideAnimatedStickers(),
-        .keywords = { u"animated"_q }
+        .keywords = { u"animated"_q, u"stickers"_q }
     });
     
     if (animated) {
@@ -58,6 +58,24 @@ void BuildHardenedSectionContent(SectionBuilder &builder) {
             settings->setHideAnimatedStickers(!checked);
             Core::App().saveSettingsDelayed();
         }, animated->lifetime());
+    }
+    
+    
+    const auto all = builder.addCheckbox({
+        .id = u"hardened/show_all_lottie"_q,
+        .title = tr::lng_settings_hardened_all_lottie(),
+        .checked = !settings->hideAllLottie(),
+        .keywords = { u"animated"_q, u"lottie"_q }
+    });
+    
+    if (all) {
+        all->checkedChanges() | rpl::filter([=](bool checked) {
+            return (settings->hideAllLottie() == checked);
+        })
+        | rpl::on_next([=](bool checked) {
+            settings->setHideAllLottie(!checked);
+            Core::App().saveSettingsDelayed();
+        }, all->lifetime());
     }
 }
 

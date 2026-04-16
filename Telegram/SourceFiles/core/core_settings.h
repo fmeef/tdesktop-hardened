@@ -1041,11 +1041,29 @@ public:
 
 	void resetOnLastLogout();
     
-    void setHideAnimatedStickers(bool value);
+    bool hideAnimatedStickers() const {
+        return _hideAnimatedStickers.current();
+    }
+
+    rpl::producer<bool> hideAnimatedStickersValue() const {
+        return _hideAnimatedStickers.value();
+    }
+
+    void setHideAnimatedStickers(bool value) {
+        _hideAnimatedStickers = value;
+    }
     
-    bool hideAnimatedStickers() const;
+    void setHideAllLottie(bool value) {
+        _hideAllLottie = value;
+    }
     
-    rpl::producer<bool> hideAnimatedStickersValue() const;
+    bool hideAllLottie() const {
+        return _hideAllLottie.current();
+    }
+    
+    rpl::producer<bool> hideAllLottieValue() const {
+        return _hideAllLottie.value();
+    }
 
 private:
 	void resolveRecentEmoji() const;
@@ -1211,6 +1229,8 @@ private:
 	QByteArray _photoEditorBrush;
     
     rpl::variable<bool> _hideAnimatedStickers = false;
+    
+    rpl::variable<bool> _hideAllLottie = true;
 
 };
 

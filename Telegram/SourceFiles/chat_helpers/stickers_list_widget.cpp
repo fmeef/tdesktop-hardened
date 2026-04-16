@@ -53,6 +53,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_chat_helpers.h"
 #include "styles/style_window.h"
 #include "styles/style_menu_icons.h"
+#include "core/core_settings.h"
 
 #include <QtWidgets/QApplication>
 
@@ -1618,6 +1619,9 @@ void StickersListWidget::ensureLottiePlayer(Set &set) {
 }
 
 void StickersListWidget::setupLottie(Set &set, int section, int index) {
+    if (Core::App().settings().hideAllLottie()) {
+        return;
+    }
 	auto &sticker = set.stickers[index];
 	ensureLottiePlayer(set);
 

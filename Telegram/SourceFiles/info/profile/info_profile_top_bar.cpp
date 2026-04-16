@@ -102,6 +102,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_layers.h"
 #include "styles/style_menu_icons.h"
 #include "styles/style_settings.h"
+#include "core/core_settings.h"
 
 #include <QtGui/QClipboard>
 #include <QtGui/QGuiApplication>
@@ -2419,7 +2420,7 @@ void TopBar::setupNewGifts(
 			if (!entry.animation && !entry.lastFrame.isNull()) {
 				continue;
 			}
-			if (!entry.animation && entry.media->loaded()) {
+			if (!entry.animation && entry.media->loaded() && !Core::App().settings().hideAllLottie()) {
 				entry.animation = LottieAnimationFromDocument(
 					_lottiePlayer.get(),
 					entry.media.get(),

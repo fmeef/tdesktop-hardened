@@ -14,6 +14,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/stickers/data_stickers_set.h"
 #include "data/stickers/data_stickers.h"
 #include "data/stickers/data_custom_emoji.h"
+#include "core/core_settings.h"
 #include "data/data_file_origin.h"
 #include "data/data_channel.h"
 #include "data/data_session.h"
@@ -1178,6 +1179,9 @@ void StickersListFooter::customEmojiRepaint() {
 
 void StickersListFooter::validateIconLottieAnimation(
 		const StickerIcon &icon) {
+    if (Core::App().settings().hideAllLottie()) {
+        return;
+    }
 	icon.ensureMediaCreated();
 	if (icon.lottie
 		|| !icon.sticker

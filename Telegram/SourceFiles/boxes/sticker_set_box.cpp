@@ -2084,6 +2084,10 @@ void StickerSetBox::Inner::visibleTopBottomUpdated(
 }
 
 void StickerSetBox::Inner::setupLottie(int index) {
+    if (Core::App().settings().hideAllLottie()) {
+        return;
+    }
+    
 	auto &element = _elements[index];
 
 	element.lottie = ChatHelpers::LottieAnimationFromDocument(

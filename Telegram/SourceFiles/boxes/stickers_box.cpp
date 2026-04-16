@@ -1559,6 +1559,9 @@ void StickersBox::Inner::paintRowThumbnail(
 }
 
 void StickersBox::Inner::validateLottieAnimation(not_null<Row*> row) {
+    if (Core::App().settings().hideAllLottie()) {
+        return;
+    }
 	if (row->lottie
 		|| !ChatHelpers::HasLottieThumbnail(
 			row->set->thumbnailType(),
