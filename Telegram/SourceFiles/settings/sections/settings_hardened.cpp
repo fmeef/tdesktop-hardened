@@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/ui_utility.h"
 #include "ui/widgets/checkbox.h"
 #include "ui/vertical_list.h"
+#include <QAction>
 
 
 namespace Settings {
