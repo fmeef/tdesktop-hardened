@@ -428,6 +428,9 @@ StickersBox::StickersBox(
 , _masks(_isMasks ? Tab(0, this, _show, Section::Masks) : Tab())
 , _featured(_isMasks ? Tab() : Tab(1, this, _show, Section::Featured))
 , _archived((_isMasks ? 1 : 2), this, _show, Section::Archived) {
+    Core::App().settings().hideAllLottieValue() | rpl::on_next([=](bool hide) {
+        saveChanges();
+    }, lifetime());
 	_tabs->setRippleTopRoundRadius(st::boxRadius);
 }
 
@@ -448,6 +451,9 @@ StickersBox::StickersBox(
 	) | rpl::on_next([=](int y) {
 		scrollToY(y);
 	}, lifetime());
+    Core::App().settings().hideAllLottieValue() | rpl::on_next([=](bool hide) {
+        saveChanges();
+    }, lifetime());
 }
 
 StickersBox::StickersBox(
@@ -463,6 +469,9 @@ StickersBox::StickersBox(
 , _attached(0, this, _show, Section::Attached)
 , _attachedType(Data::StickersType::Stickers)
 , _attachedSets(attachedSets) {
+    Core::App().settings().hideAllLottieValue() | rpl::on_next([=](bool hide) {
+        saveChanges();
+    }, lifetime());
 }
 
 StickersBox::StickersBox(
@@ -478,6 +487,9 @@ StickersBox::StickersBox(
 , _attached(0, this, _show, Section::Attached)
 , _attachedType(Data::StickersType::Emoji)
 , _emojiSets(emojiSets) {
+    Core::App().settings().hideAllLottieValue() | rpl::on_next([=](bool hide) {
+        saveChanges();
+    }, lifetime());
 }
 
 Main::Session &StickersBox::session() const {

@@ -516,6 +516,9 @@ StickerSetBox::StickerSetBox(
 , _set(set)
 , _type(type)
 , _previewDocumentId(previewDocumentId) {
+    Core::App().settings().hideAllLottieValue() | rpl::on_next([=](bool hide) {
+        repaint();
+    }, lifetime());
 }
 
 StickerSetBox::StickerSetBox(
@@ -523,6 +526,9 @@ StickerSetBox::StickerSetBox(
 	std::shared_ptr<ChatHelpers::Show> show,
 	not_null<Data::StickersSet*> set)
 : StickerSetBox(parent, std::move(show), set->identifier(), set->type()) {
+    Core::App().settings().hideAllLottieValue() | rpl::on_next([=](bool hide) {
+        repaint();
+    }, lifetime());
 }
 
 base::weak_qptr<Ui::BoxContent> StickerSetBox::Show(

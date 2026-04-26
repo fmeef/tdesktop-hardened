@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "history/view/media/history_view_media.h"
 #include "history/view/media/history_view_sticker.h"
+#include "rpl/lifetime.h"
 
 namespace Ui {
 class DynamicImage;
@@ -135,6 +136,7 @@ private:
 	bool _expandCurrentWidth : 1 = false;
 	bool _service : 1 = false;
 	bool _hideServiceText : 1 = false;
+    rpl::lifetime _lifetime;
 
 };
 

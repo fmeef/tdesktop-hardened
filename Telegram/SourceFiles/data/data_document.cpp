@@ -291,7 +291,7 @@ bool StickerData::isStatic() const {
 }
 
 bool StickerData::isLottie() const {
-	return (type == StickerType::Tgs) && !Core::App().settings().hideAllLottie();
+    return (type == StickerType::Tgs);
 }
 
 bool StickerData::isAnimated() const {
@@ -685,9 +685,7 @@ not_null<DocumentData*> DocumentData::chooseQuality(
 }
 
 void DocumentData::validateLottieSticker() {
-    if (Core::App().settings().hideAllLottie()) {
-        return;
-    }
+
 	if (type == FileDocument
 		&& hasMimeType(u"application/x-tgsticker"_q)) {
 		type = StickerDocument;

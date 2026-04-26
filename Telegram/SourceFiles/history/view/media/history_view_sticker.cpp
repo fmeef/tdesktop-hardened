@@ -97,31 +97,33 @@ Sticker::Sticker(
 , _cachingTag(ChatHelpers::StickerLottieSize::MessageHistory)
 , _skipPremiumEffect(skipPremiumEffect)
 , _sensitiveBlurred(parent->data()->isMediaSensitive()) {
-	if ((_dataMedia = _data->activeMediaView())) {
-		dataMediaCreated();
-	} else {
-		_data->loadThumbnail(parent->data()->fullId());
-		if (hasPremiumEffect()) {
-			_data->loadVideoThumbnail(parent->data()->fullId());
-		}
-	}
-	if (const auto media = replacing ? replacing->media() : nullptr) {
-		_player = media->stickerTakePlayer(_data, _replacements);
-		if (_player) {
-			if (hasPremiumEffect() && !_premiumEffectPlayed) {
-				_premiumEffectPlayed = true;
-				if (On(PowerSaving::kStickersChat)
-					&& !_premiumEffectSkipped) {
-					_premiumEffectSkipped = true;
-				} else {
-					_parent->delegate()->elementStartPremium(
-						_parent,
-						replacing);
-				}
-			}
-			playerCreated();
-		}
-	}
+    Core::App().settings().hideAllLottieValue() | rpl::on_next([=](bool hide) {
+        if ((_dataMedia = _data->activeMediaView())) {
+            dataMediaCreated();
+        } else {
+            _data->loadThumbnail(parent->data()->fullId());
+            if (hasPremiumEffect()) {
+                _data->loadVideoThumbnail(parent->data()->fullId());
+            }
+        }
+        if (const auto media = replacing ? replacing->media() : nullptr) {
+            _player = media->stickerTakePlayer(_data, _replacements);
+            if (_player) {
+                if (hasPremiumEffect() && !_premiumEffectPlayed) {
+                    _premiumEffectPlayed = true;
+                    if (On(PowerSaving::kStickersChat)
+                        && !_premiumEffectSkipped) {
+                        _premiumEffectSkipped = true;
+                    } else {
+                        _parent->delegate()->elementStartPremium(
+                            _parent,
+                            replacing);
+                    }
+                }
+                playerCreated();
+            }
+        }
+    }, _lifetime);
 }
 
 Sticker::~Sticker() {
@@ -191,7 +193,7 @@ bool Sticker::readyToDrawAnimationFrame() {
 	const auto loaded = _dataMedia->loaded();
 	const auto waitingForPremium = hasPremiumEffect()
 		&& _dataMedia->videoThumbnailContent().isEmpty();
-	if (!_player && loaded && !waitingForPremium && sticker->isAnimated()) {
+	if (!_player && loaded && !waitingForPremium && sticker->isAnimated() && !Core::App().settings().hideAllLottie()) {
 		setupPlayer();
 	}
 	return ready();
@@ -245,7 +247,7 @@ void Sticker::draw(
     
     if ((_data->sticker()->isAnimated() ||
         _data->sticker()->isLottie()) && Core::App().settings().hideAnimatedStickers()) {
-        paintSensitiveTag(p, context, r);
+        paintStickerDisabled(p, context, r);
         return;
     }
 
@@ -260,6 +262,40 @@ void Sticker::draw(
 	if (_sensitiveBlurred) {
 		paintSensitiveTag(p, context, r);
 	}
+}
+
+void Sticker::paintStickerDisabled(
+        Painter &p,
+        const PaintContext &context,
+        const QRect &r) {
+    auto text = Ui::Text::String();
+    auto iconSkip = 0;
+    text.setText(
+        st::semiboldTextStyle,
+        tr::lng_sensitive_tag(tr::now));
+    iconSkip = st::mediaMenuIconStealth.width() * 1.4;
+    const auto width = iconSkip + text.maxWidth();
+    const auto inner = QRect(0, 0, width, text.minHeight());
+    const auto outer = style::centerrect(
+        r,
+        inner.marginsAdded(st::paidTagPadding));
+    const auto size = outer.size();
+    const auto real = outer.marginsRemoved(st::paidTagPadding);
+    const auto radius = std::min(size.width(), size.height()) / 2;
+    p.setPen(Qt::NoPen);
+    p.setBrush(context.st->msgServiceBg());
+    p.drawRoundedRect(outer, radius, radius);
+    p.setPen(context.st->msgServiceFg());
+    if (iconSkip) {
+        st::mediaMenuIconStealth.paint(
+            p,
+            real.x(),
+            (outer.y()
+                + (size.height() - st::mediaMenuIconStealth.height()) / 2),
+            outer.width(),
+            context.st->msgServiceFg()->c);
+    }
+    text.draw(p, real.x() + iconSkip, real.y(), width);
 }
 
 void Sticker::paintSensitiveTag(
@@ -625,7 +661,8 @@ void Sticker::setWebpagePart() {
 void Sticker::setupPlayer() {
 	Expects(_dataMedia != nullptr);
 
-	if (_data->sticker()->isLottie()) {
+	if (_data->sticker()->isLottie() && !Core::App().settings().hideAllLottie()) {
+        
 		_player = std::make_unique<LottiePlayer>(
 			ChatHelpers::LottiePlayerFromDocument(
 				_dataMedia.get(),
@@ -639,9 +676,11 @@ void Sticker::setupPlayer() {
 			_dataMedia->bytes(),
 			countOptimalSize());
 	}
-
-	checkPremiumEffectStart();
-	playerCreated();
+    if (!Core::App().settings().hideAllLottie()) {
+    
+        checkPremiumEffectStart();
+        playerCreated();
+    }
 }
 
 void Sticker::checkPremiumEffectStart() {

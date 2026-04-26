@@ -116,6 +116,11 @@ private:
 		Painter &p,
 		const PaintContext &context,
 		const QRect &r);
+        
+    void paintStickerDisabled(
+        Painter &p,
+        const PaintContext &context,
+        const QRect &r);
 
 	void ensureDataMediaCreated() const;
 	void dataMediaCreated() const;
@@ -151,7 +156,7 @@ private:
 	bool _playingOnce : 1 = false;
 	bool _stopOnLastFrame : 1 = false;
 	bool _sensitiveBlurred : 1 = false;
-
+    rpl::lifetime _lifetime;
 };
 
 } // namespace HistoryView

@@ -21,6 +21,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/rect.h"
 #include "ui/round_rect.h"
 #include "styles/style_chat.h"
+#include "core/application.h"
+#include "core/core_settings.h"
 
 namespace HistoryView {
 namespace {
@@ -74,6 +76,11 @@ MediaGeneric::MediaGeneric(
 			.object = std::move(part),
 		});
 	});
+    
+    Core::App().settings().hideAllLottieValue() | rpl::on_next([=](bool hide) {
+        this->updateItemData();
+        this->repaint();
+    }, _lifetime);
 }
 
 MediaGeneric::~MediaGeneric() {

@@ -23,6 +23,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/image/image_location_factory.h"
 #include "ui/painter.h"
 #include "main/main_session.h"
+#include "core/core_settings.h"
+#include "core/application.h"
 
 #include <xxhash.h>
 
@@ -124,8 +126,10 @@ std::unique_ptr<Lottie::SinglePlayer> LottiePlayerFromDocument(
 		QSize box,
 		Lottie::Quality quality,
 		std::shared_ptr<Lottie::FrameRenderer> renderer) {
-	const auto method = [&](auto &&...args) {
-		return std::make_unique<Lottie::SinglePlayer>(
+    Assert(!Core::App().settings().hideAllLottie());
+        
+    const auto method = [&](auto &&...args) {
+    return std::make_unique<Lottie::SinglePlayer>(
 			std::forward<decltype(args)>(args)...,
 			quality,
 			replacements,
@@ -152,6 +156,11 @@ bool HasLottieThumbnail(
 		StickerType thumbType,
 		Data::StickersSetThumbnailView *thumb,
 		Data::DocumentMedia *media) {
+    
+    if (Core::App().settings().hideAllLottie()) {
+        return false;
+    }
+    
 	if (thumb) {
 		return (thumbType == StickerType::Tgs)
 			&& !thumb->content().isEmpty();
