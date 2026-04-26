@@ -37,6 +37,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_chat.h"
 #include "styles/style_chat_helpers.h"
 #include "styles/style_menu_icons.h"
+#include "data/stickers/data_stickers.h"
 
 namespace HistoryView {
 namespace {
@@ -268,11 +269,12 @@ void Sticker::paintStickerDisabled(
         Painter &p,
         const PaintContext &context,
         const QRect &r) {
+    
     auto text = Ui::Text::String();
     auto iconSkip = 0;
     text.setText(
         st::semiboldTextStyle,
-        tr::lng_sensitive_tag(tr::now));
+        tr::lng_hardened_hidden_sticker(tr::now) + " (" + _data->sticker()->alt + ")");
     iconSkip = st::mediaMenuIconStealth.width() * 1.4;
     const auto width = iconSkip + text.maxWidth();
     const auto inner = QRect(0, 0, width, text.minHeight());

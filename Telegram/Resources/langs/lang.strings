@@ -7973,5 +7973,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_settings_hardened_menu" = "Hardened";
 "lng_settings_hardened_anim_stickers" = "Show animated stickers";
 "lng_settings_hardened_all_lottie" = "All lottie animations";
+"lng_hardened_hidden_sticker" = "Virus sticker blocked!";
 
 // Keys finished
