@@ -27,6 +27,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_chat_helpers.h"
 #include "styles/style_chat.h"
 #include "styles/style_layers.h"
+#include "core/core_settings.h"
+#include "core/application.h"
 
 namespace Window {
 namespace {
@@ -412,8 +414,11 @@ void MediaPreviewWidget::createLottieIfReady(
 }
 
 void MediaPreviewWidget::setupLottie() {
+    if (Core::App().settings().hideAllLottie()) {
+        return;
+    }
 	Expects(_document != nullptr);
-
+    
 	const auto factor = style::DevicePixelRatio();
 	if (_document->isPremiumSticker()) {
 		const auto size = HistoryView::Sticker::Size(_document);

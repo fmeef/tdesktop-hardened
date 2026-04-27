@@ -191,6 +191,7 @@ std::unique_ptr<Lottie::SinglePlayer> LottieThumbnail(
 		StickerLottieSize sizeTag,
 		QSize box,
 		std::shared_ptr<Lottie::FrameRenderer> renderer) {
+    Assert(!Core::App().settings().hideAllLottie());
 	const auto baseKey = thumb
 		? thumb->owner()->thumbnailBigFileBaseCacheKey()
 		: media

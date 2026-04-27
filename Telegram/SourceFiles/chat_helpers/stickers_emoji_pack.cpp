@@ -272,6 +272,7 @@ std::unique_ptr<Lottie::SinglePlayer> EmojiPack::effectPlayer(
 		QByteArray data,
 		QString filepath,
 		EffectType type) {
+    Assert(!Core::App().settings().hideAllLottie());
 	// Shortened copy from stickers_lottie module.
 	const auto baseKey = document->bigFileBaseCacheKey();
 	const auto tag = uint8(type);
