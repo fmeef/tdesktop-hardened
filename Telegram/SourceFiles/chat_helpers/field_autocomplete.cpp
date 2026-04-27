@@ -1477,18 +1477,20 @@ auto FieldAutocomplete::Inner::getLottieRenderer()
 }
 
 void FieldAutocomplete::Inner::setupLottie(StickerSuggestion &suggestion) {
-	const auto document = suggestion.document;
-	suggestion.lottie = LottiePlayerFromDocument(
-		suggestion.documentMedia.get(),
-		StickerLottieSize::InlineResults,
-		stickerBoundingBox() * style::DevicePixelRatio(),
-		Lottie::Quality::Default,
-		getLottieRenderer());
-
-	suggestion.lottie->updates(
-	) | rpl::on_next([=] {
-		repaintSticker(document);
-	}, _stickersLifetime);
+    if (!Core::App().settings().hideAllLottie()) {
+        const auto document = suggestion.document;
+        suggestion.lottie = LottiePlayerFromDocument(
+                                                     suggestion.documentMedia.get(),
+                                                     StickerLottieSize::InlineResults,
+                                                     stickerBoundingBox() * style::DevicePixelRatio(),
+                                                     Lottie::Quality::Default,
+                                                     getLottieRenderer());
+        
+        suggestion.lottie->updates(
+                                   ) | rpl::on_next([=] {
+                                       repaintSticker(document);
+                                   }, _stickersLifetime);
+    }
 }
 
 void FieldAutocomplete::Inner::setupWebm(StickerSuggestion &suggestion) {

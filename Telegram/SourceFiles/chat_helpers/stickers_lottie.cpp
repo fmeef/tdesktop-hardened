@@ -53,6 +53,7 @@ auto LottieCachedFromContent(
 		not_null<Main::Session*> session,
 		const QByteArray &content,
 		QSize box) {
+    Assert(!Core::App().settings().hideAllLottie());
 	const auto key = Storage::Cache::Key{
 		baseKey.high,
 		baseKey.low + keyShift
@@ -81,6 +82,7 @@ auto LottieFromDocument(
 		not_null<Data::DocumentMedia*> media,
 		uint8 keyShift,
 		QSize box) {
+    Assert(!Core::App().settings().hideAllLottie());
 	const auto document = media->owner();
 	const auto data = media->bytes();
 	const auto filepath = document->filepath();
@@ -110,6 +112,7 @@ std::unique_ptr<Lottie::SinglePlayer> LottiePlayerFromDocument(
 		QSize box,
 		Lottie::Quality quality,
 		std::shared_ptr<Lottie::FrameRenderer> renderer) {
+    Assert(!Core::App().settings().hideAllLottie());
 	return LottiePlayerFromDocument(
 		media,
 		nullptr,
@@ -146,6 +149,7 @@ not_null<Lottie::Animation*> LottieAnimationFromDocument(
 		not_null<Data::DocumentMedia*> media,
 		StickerLottieSize sizeTag,
 		QSize box) {
+    Assert(!Core::App().settings().hideAllLottie());
 	const auto method = [&](auto &&...args) {
 		return player->append(std::forward<decltype(args)>(args)...);
 	};
