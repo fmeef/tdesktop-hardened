@@ -35,6 +35,7 @@ public:
 		const style::ComposeControls &st,
 		Fn<bool()> gifPaused,
 		not_null<HistoryItem*> item,
+        bool noAnimation,
 		AttachControls::Type type);
 
 	std::shared_ptr<::Data::PhotoMedia> sharedPhotoMedia() const;

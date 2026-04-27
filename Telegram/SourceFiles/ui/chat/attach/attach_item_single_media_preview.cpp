@@ -35,8 +35,9 @@ ItemSingleMediaPreview::ItemSingleMediaPreview(
 	const style::ComposeControls &st,
 	Fn<bool()> gifPaused,
 	not_null<HistoryItem*> item,
+    bool noAnimation,
 	AttachControls::Type type)
-: AbstractSingleMediaPreview(parent, st, type)
+: AbstractSingleMediaPreview(parent, st, noAnimation, type)
 , _gifPaused(std::move(gifPaused))
 , _fullId(item->fullId()) {
 	const auto media = item->media();

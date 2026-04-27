@@ -490,6 +490,7 @@ void EditCaptionBox::rebuildPreview() {
 				st::defaultComposeControls,
 				gifPaused,
 				_historyItem,
+                Core::App().settings().hideAllLottie(),
 				Ui::AttachControls::Type::EditOnly);
 			_photoMedia = media->sharedPhotoMedia();
 			_content.reset(media);
@@ -508,6 +509,7 @@ void EditCaptionBox::rebuildPreview() {
 			st::defaultComposeControls,
 			gifPaused,
 			file,
+            Core::App().settings().hideAllLottie(),
 			Ui::AttachControls::Type::EditOnly);
 		_isPhoto = (media && media->isPhoto());
 		if (media && !_asFile) {

@@ -71,6 +71,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_layers.h"
 #include "styles/style_settings.h"
 #include "styles/style_menu_icons.h"
+#include "core/core_settings.h"
+#include "core/application.h"
 
 #include <QtCore/QMimeData>
 
@@ -408,7 +410,8 @@ SendFilesBox::Block::Block(
 				parent,
 				st,
 				gifPaused,
-				first)
+				first,
+                Core::App().settings().hideAllLottie())
 			: nullptr;
 		if (media) {
 			_isSingleMedia = true;

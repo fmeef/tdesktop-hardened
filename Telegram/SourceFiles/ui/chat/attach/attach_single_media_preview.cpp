@@ -19,6 +19,7 @@ SingleMediaPreview *SingleMediaPreview::Create(
 		const style::ComposeControls &st,
 		Fn<bool()> gifPaused,
 		const PreparedFile &file,
+        bool noAnimation,
 		AttachControls::Type type) {
 	auto preview = QImage();
 	auto animated = false;
@@ -53,6 +54,7 @@ SingleMediaPreview *SingleMediaPreview::Create(
 		Core::IsMimeSticker(file.information->filemime),
 		file.spoiler,
 		animationPreview ? file.path : QString(),
+        noAnimation,
 		type);
 	result->setCanShowHighQualityBadge(file.canUseHighQualityPhoto());
 	return result;
@@ -67,15 +69,19 @@ SingleMediaPreview::SingleMediaPreview(
 	bool sticker,
 	bool spoiler,
 	const QString &animatedPreviewPath,
-	AttachControls::Type type)
-: AbstractSingleMediaPreview(parent, st, type)
+    bool noAnimation,
+	AttachControls::Type type
+)
+: AbstractSingleMediaPreview(parent, st, noAnimation, type)
 , _gifPaused(std::move(gifPaused))
 , _sticker(sticker) {
 	Expects(!preview.isNull());
 	setAnimated(animated);
 
 	preparePreview(preview);
-	prepareAnimatedPreview(animatedPreviewPath, animated);
+    if (!noAnimation) {
+        prepareAnimatedPreview(animatedPreviewPath, animated);
+    }
 	setSpoiler(spoiler);
 }
 
@@ -112,7 +118,7 @@ bool SingleMediaPreview::tryPaintAnimation(QPainter &p) {
 }
 
 bool SingleMediaPreview::isAnimatedPreviewReady() const {
-	return _gifPreview || _lottiePreview;
+	return (_gifPreview || _lottiePreview) && !_noAnimation;
 }
 
 void SingleMediaPreview::prepareAnimatedPreview(

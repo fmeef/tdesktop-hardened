@@ -30,12 +30,15 @@ constexpr auto kMinPreviewWidth = 20;
 AbstractSingleMediaPreview::AbstractSingleMediaPreview(
 	QWidget *parent,
 	const style::ComposeControls &st,
+    bool noAnimation,
 	AttachControls::Type type)
 : AbstractSinglePreview(parent)
+, _noAnimation(noAnimation)
 , _st(st)
 , _minThumbH(st::sendBoxAlbumGroupSize.height()
 	+ st::sendBoxAlbumGroupSkipTop * 2)
-, _controls(base::make_unique_q<AttachControlsWidget>(this, type)) {
+, _controls(base::make_unique_q<AttachControlsWidget>(this, type))
+{
 }
 
 AbstractSingleMediaPreview::~AbstractSingleMediaPreview() = default;

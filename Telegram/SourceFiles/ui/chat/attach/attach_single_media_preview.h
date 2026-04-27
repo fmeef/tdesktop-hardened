@@ -25,6 +25,7 @@ public:
 		const style::ComposeControls &st,
 		Fn<bool()> gifPaused,
 		const PreparedFile &file,
+        bool noAnimation,
 		AttachControls::Type type = AttachControls::Type::Full);
 
 	SingleMediaPreview(
@@ -36,6 +37,7 @@ public:
 		bool sticker,
 		bool spoiler,
 		const QString &animatedPreviewPath,
+        bool noAnimation,
 		AttachControls::Type type);
 
 protected:

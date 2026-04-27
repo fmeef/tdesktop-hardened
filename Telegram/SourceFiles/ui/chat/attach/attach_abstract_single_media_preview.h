@@ -24,6 +24,7 @@ public:
 	AbstractSingleMediaPreview(
 		QWidget *parent,
 		const style::ComposeControls &st,
+        bool noAnimation,
 		AttachControls::Type type);
 	~AbstractSingleMediaPreview();
 
@@ -57,6 +58,7 @@ protected:
 	int previewHeight() const;
 
 	void setAnimated(bool animated);
+    bool _noAnimation;
 
 private:
 	void paintEvent(QPaintEvent *e) override;
@@ -88,7 +90,7 @@ private:
 	style::cursor _cursor = style::cur_default;
 	bool _pressed = false;
 
-	rpl::event_stream<> _modifyRequests;
+    rpl::event_stream<> _modifyRequests;
 
 };
 
