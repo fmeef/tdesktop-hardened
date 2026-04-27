@@ -44,15 +44,17 @@ void BuildHardenedSectionContent(SectionBuilder &builder) {
         .title = tr::lng_settings_section_lottie(),
         .keywords = { u"hardened"_q },
     });
-    const auto animated = builder.addCheckbox({
+    const auto animated = builder.addButton({
         .id = u"hardened/show_animated_stickers"_q,
         .title = tr::lng_settings_hardened_anim_stickers(),
-        .checked = !settings->hideAnimatedStickers(),
+        .toggled = settings->hideAnimatedStickersValue() | rpl::map([](bool checked) {
+            return !checked;
+        }),
         .keywords = { u"animated"_q, u"stickers"_q }
     });
     
     if (animated) {
-        animated->checkedChanges() | rpl::filter([=](bool checked) {
+        animated->toggledValue() | rpl::filter([=](bool checked) {
             return (settings->hideAnimatedStickers() == checked);
         })
         | rpl::on_next([=](bool checked) {
@@ -62,15 +64,17 @@ void BuildHardenedSectionContent(SectionBuilder &builder) {
     }
     
     
-    const auto all = builder.addCheckbox({
+    const auto all = builder.addButton({
         .id = u"hardened/show_all_lottie"_q,
         .title = tr::lng_settings_hardened_all_lottie(),
-        .checked = !settings->hideAllLottie(),
+        .toggled = settings->hideAllLottieValue() | rpl::map([](bool checked) {
+            return !checked;
+        }),
         .keywords = { u"animated"_q, u"lottie"_q }
     });
     
     if (all) {
-        all->checkedChanges() | rpl::filter([=](bool checked) {
+        all->toggledValue() | rpl::filter([=](bool checked) {
             return (settings->hideAllLottie() == checked);
         })
         | rpl::on_next([=](bool checked) {
