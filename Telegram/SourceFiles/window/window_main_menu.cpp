@@ -384,7 +384,7 @@ MainMenu::MainMenu(
 	parentResized();
 
 	_telegram->setMarkedText(tr::link(
-		u"Telegram Desktop"_q,
+		u"TDesktop Hardened"_q,
 		u"https://desktop.telegram.org"_q));
 	_telegram->setLinksTrusted();
 	_version->setMarkedText(

@@ -19,7 +19,7 @@ endif()
 project(Telegram
     LANGUAGES C CXX
     VERSION ${desktop_app_version_cmake}
-    DESCRIPTION "Official Telegram Desktop messenger"
+    DESCRIPTION "Hardened telegram desktop client"
     HOMEPAGE_URL "https://desktop.telegram.org"
 )
 
