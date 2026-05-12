@@ -34,7 +34,6 @@ namespace {
 using namespace Builder;
 
 void BuildHardenedSectionContent(SectionBuilder &builder) {
-    const auto controller = builder.controller();
     const auto session = builder.session();
     const auto settings = &Core::App().settings();
     builder.addDivider();
