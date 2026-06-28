@@ -270,9 +270,13 @@ QByteArray Settings::serialize() const {
 		size += Serialize::bytearraySize(key)
 			+ Serialize::bytearraySize(value);
 	}
-	size += sizeof(qint32); // _audioPlaybackSpeed
-    size += sizeof(qint32); // _hideAnimatedStickers
+
+	size += sizeof(qint32); // _hideAnimatedStickers
     size += sizeof(qint32); // _hideAllLottie
+	
+	size += sizeof(qint32) // _audioPlaybackSpeed
+		+ sizeof(qint32); // _mediaGridZoomStep
+
 	auto result = QByteArray();
 	result.reserve(size);
 	{
@@ -446,8 +450,10 @@ QByteArray Settings::serialize() const {
 			stream << key << value;
 		}
 		stream << qint32(SerializePlaybackSpeed(_audioPlaybackSpeed.current()));
-        stream << qint32(_hideAnimatedStickers.current() ? 1 : 0);
+    stream << qint32(_hideAnimatedStickers.current() ? 1 : 0);
         stream << qint32(_hideAllLottie.current() ? 1 : 0);
+		stream << qint32(_mediaGridZoomStep);
+
 	}
 
 	Ensures(result.size() == size);
@@ -963,16 +969,23 @@ void Settings::addFromSerialized(const QByteArray &serialized) {
 		if (stream.status() == QDataStream::Ok) {
 			audioPlaybackSpeed = speed;
 		}
+	}   
+	if (!stream.atEnd()) {
+      stream >> hideAnimatedStickers;
+  }
+  
+  if (!stream.atEnd()) {
+      stream >> hideAllLottie;
+  }
+  
+	if (!stream.atEnd()) {
+		auto step = qint32();
+		stream >> step;
+		if (stream.status() == QDataStream::Ok) {
+			_mediaGridZoomStep = step;
+		}
 	}
-    
-    if (!stream.atEnd()) {
-        stream >> hideAnimatedStickers;
-    }
-    
-    if (!stream.atEnd()) {
-        stream >> hideAllLottie;
-    }
-    
+
 	if (stream.status() != QDataStream::Ok) {
 		LOG(("App Error: "
 			"Bad data for Core::Settings::constructFromSerialized()"));

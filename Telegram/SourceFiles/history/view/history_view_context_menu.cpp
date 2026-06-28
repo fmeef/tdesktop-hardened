@@ -1672,12 +1672,18 @@ void CopyPostLink(
 			).append('\n').append(Platform::IsMac()
 				? tr::lng_public_post_private_hint_cmd(tr::now)
 				: tr::lng_public_post_private_hint_ctrl(tr::now)),
+			.iconLottie = u"toast/voip_invite"_q,
+			.iconLottieSize = st::toastLottieIconSize,
 			.duration = kPublicPostLinkToastDuration,
 		});
+	} else if (isPublicLink) {
+		show->showToast({
+			.text = { tr::lng_channel_public_link_copied(tr::now) },
+			.iconLottie = u"toast/voip_invite"_q,
+			.iconLottieSize = st::toastLottieIconSize,
+		});
 	} else {
-		show->showToast(isPublicLink
-			? tr::lng_channel_public_link_copied(tr::now)
-			: tr::lng_context_about_private_link(tr::now));
+		show->showToast(tr::lng_context_about_private_link(tr::now));
 	}
 }
 
@@ -1692,7 +1698,11 @@ void CopyStoryLink(
 	const auto story = *maybeStory;
 	QGuiApplication::clipboard()->setText(
 		session->api().exportDirectStoryLink(story));
-	show->showToast(tr::lng_channel_public_link_copied(tr::now));
+	show->showToast({
+		.text = { tr::lng_channel_public_link_copied(tr::now) },
+		.iconLottie = u"toast/voip_invite"_q,
+		.iconLottieSize = st::toastLottieIconSize,
+	});
 }
 
 void FillPollOptionPage(
@@ -2048,9 +2058,26 @@ void AddWhenEditedForwardedAuthorActionHelper(
 			if (insertSeparator && !menu->empty()) {
 				menu->addSeparator(&st::expandedMenuSeparator);
 			}
-			menu->addAction(Ui::WhenReadContextAction(
-				menu.get(),
-				Api::WhenEdited(item->from(), edited->date)));
+			if (item->history()->session().messagePrimaryEditedDate()) {
+				const auto sent = base::unixtime::parse(item->date());
+				auto label = base::make_unique_q<Ui::Menu::MultilineAction>(
+					menu->menu(),
+					menu->st().menu,
+					st::historyHasCustomEmoji,
+					st::historyHasCustomEmojiPosition,
+					tr::marked(tr::lng_sent_on(
+						tr::now,
+						lt_date,
+						langDayOfMonthShort(sent.date()),
+						lt_time,
+						QLocale().toString(sent.time(), QLocale::ShortFormat))));
+				label->setAttribute(Qt::WA_TransparentForMouseEvents);
+				menu->addAction(std::move(label));
+			} else {
+				menu->addAction(Ui::WhenReadContextAction(
+					menu.get(),
+					Api::WhenEdited(item->from(), edited->date)));
+			}
 		}
 	}
 	if (item->canLookupMessageAuthor()) {
