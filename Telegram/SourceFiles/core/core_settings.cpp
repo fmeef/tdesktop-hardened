@@ -275,7 +275,8 @@ QByteArray Settings::serialize() const {
     size += sizeof(qint32); // _hideAllLottie
 	
 	size += sizeof(qint32) // _audioPlaybackSpeed
-		+ sizeof(qint32); // _mediaGridZoomStep
+		+ sizeof(qint32) // _mediaGridZoomStep
+		+ sizeof(qint32); // _pullToNextChannel
 
 	auto result = QByteArray();
 	result.reserve(size);
@@ -453,6 +454,7 @@ QByteArray Settings::serialize() const {
     stream << qint32(_hideAnimatedStickers.current() ? 1 : 0);
         stream << qint32(_hideAllLottie.current() ? 1 : 0);
 		stream << qint32(_mediaGridZoomStep);
+		stream << qint32(_pullToNextChannel.current() ? 1 : 0);
 
 	}
 
@@ -560,6 +562,7 @@ void Settings::addFromSerialized(const QByteArray &serialized) {
 	qint32 suggestAnimatedEmoji = _suggestAnimatedEmoji ? 1 : 0;
 	qint32 cornerReply = _cornerReply.current() ? 1 : 0;
 	qint32 cornerReaction = _cornerReaction.current() ? 1 : 0;
+	qint32 pullToNextChannel = _pullToNextChannel.current() ? 1 : 0;
 	qint32 legacySkipTranslationForLanguage = _translateButtonEnabled ? 1 : 0;
 	qint32 skipTranslationLanguagesCount = 0;
 	std::vector<LanguageId> skipTranslationLanguages;
@@ -986,6 +989,10 @@ void Settings::addFromSerialized(const QByteArray &serialized) {
 		}
 	}
 
+	if (!stream.atEnd()) {
+		stream >> pullToNextChannel;
+	}
+
 	if (stream.status() != QDataStream::Ok) {
 		LOG(("App Error: "
 			"Bad data for Core::Settings::constructFromSerialized()"));
@@ -1171,6 +1178,7 @@ void Settings::addFromSerialized(const QByteArray &serialized) {
 	_suggestAnimatedEmoji = (suggestAnimatedEmoji == 1);
 	_cornerReply = (cornerReply == 1);
 	_cornerReaction = (cornerReaction == 1);
+	_pullToNextChannel = (pullToNextChannel == 1);
 	{ // Parse the legacy translation setting.
 		if (legacySkipTranslationForLanguage == 0) {
 			_translateButtonEnabled = false;
@@ -1665,6 +1673,7 @@ void Settings::resetOnLastLogout() {
 	_recordVideoMessages = false;
 	_videoQuality = {};
 	_chatFiltersHorizontal = false;
+	_pullToNextChannel = true;
 	_quickDialogAction = Dialogs::Ui::QuickDialogAction::Disabled;
 	_notificationsVolume = 100;
 
