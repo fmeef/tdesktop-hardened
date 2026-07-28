@@ -8,37 +8,32 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "core/sandbox.h"
 
 #include "base/platform/base_platform_info.h"
-#include "base/concurrent_timer.h"
-#include "base/invoke_queued.h"
-#include "base/options.h"
-#include "base/qthelp_regex.h"
-#include "base/qthelp_url.h"
-#include "base/timer.h"
-#include "core/application.h"
-#include "core/crash_report_window.h"
+#include "platform/platform_specific.h"
+#include "mainwidget.h"
+#include "mainwindow.h"
+#include "storage/localstorage.h"
+#include "window/notifications_manager.h"
+#include "window/window_controller.h"
 #include "core/crash_reports.h"
-#include "core/deadlock_detector.h"
+#include "core/crash_report_window.h"
+#include "core/application.h"
 #include "core/external_control.h"
 #include "core/launcher.h"
 #include "core/local_url_handlers.h"
-#ifdef Q_OS_WIN
-#include "core/uninstall.h"
-#endif // Q_OS_WIN
 #include "core/update_checker.h"
-#include "mainwidget.h"
-#include "mainwindow.h"
+#include "core/deadlock_detector.h"
+#include "base/timer.h"
+#include "base/concurrent_timer.h"
+#include "base/invoke_queued.h"
+#include "base/options.h"
+#include "base/qthelp_url.h"
+#include "base/qthelp_regex.h"
+#include "ui/ui_utility.h"
+#include "ui/effects/animations.h"
+
 #ifdef Q_OS_MAC
 #include "platform/mac/global_menu_mac.h"
 #endif // Q_OS_MAC
-#ifdef Q_OS_WIN
-#include "platform/win/uninstall_win.h"
-#endif // Q_OS_WIN
-#include "platform/platform_specific.h"
-#include "storage/localstorage.h"
-#include "ui/effects/animations.h"
-#include "ui/ui_utility.h"
-#include "window/notifications_manager.h"
-#include "window/window_controller.h"
 
 #include <QtCore/QLockFile>
 #include <QtGui/QSessionManager>
@@ -54,10 +49,8 @@ base::options::toggle OptionDeadlockDetector({
 	.description = "Check once every 30 seconds that main thread is still responsive.",
 });
 
-#ifdef Q_OS_WIN
-constexpr auto kUninstallProcessTimeout = 30 * crl::time(1000);
-constexpr auto kUninstallIpcTimeout = 10 * crl::time(1000);
-#endif // Q_OS_WIN
+constexpr auto kCleanupIpcTimeout = 10 * crl::time(1000);
+constexpr auto kCleanupQuitTimeout = 30 * crl::time(1000);
 
 } // namespace
 
@@ -75,48 +68,22 @@ Sandbox::Sandbox(int &argc, char **argv)
 }
 
 int Sandbox::start() {
-	const auto createUpdateChecker = !Core::UpdaterDisabled();
-#ifdef Q_OS_WIN
-	const auto uninstallMode = (cLaunchMode() == LaunchModeUninstall);
-	if (uninstallMode) {
-		using Lifecycle = Uninstall::Lifecycle;
-		_uninstallLifecycle = std::make_unique<Lifecycle>(
-			Lifecycle::Operations{
-				[=](std::string_view command) {
-					const auto size = static_cast<qint64>(command.size());
-					return _localSocket.write(command.data(), size) == size;
-				},
-				[](std::uint32_t pid) {
-					return Platform::Uninstall::OpenProcess(pid);
-				},
-				[](Lifecycle::ProcessHandle handle) {
-					return Platform::Uninstall::WaitProcess(
-						handle,
-						static_cast<std::uint32_t>(
-							kUninstallProcessTimeout));
-				},
-				[](Lifecycle::ProcessHandle handle) {
-					Platform::Uninstall::CloseProcess(handle);
-				},
-				[] { return psCleanup(); },
-			});
-		_uninstallIpcTimer.setCallback([=] {
-			_uninstallLifecycle->ipcTimeout();
-			finishUninstall();
-		});
-	}
-#else // Q_OS_WIN
-	constexpr auto uninstallMode = false;
-#endif // Q_OS_WIN
-	if (!uninstallMode && createUpdateChecker) {
-		_updateChecker = std::make_unique<Core::UpdateChecker>();
-	}
-
 	{
 		const auto d = QFile::encodeName(QDir(cWorkingDir()).absolutePath());
 		char h[33] = { 0 };
 		hashMd5Hex(d.constData(), d.size(), h);
 		_localServerName = Platform::SingleInstanceLocalServerName(h);
+	}
+
+	if (cLaunchMode() == LaunchModeCleanup) {
+		const auto result = stopRunningInstance();
+		psCleanup();
+		closeApplication();
+		return result;
+	}
+
+	if (!Core::UpdaterDisabled()) {
+		_updateChecker = std::make_unique<Core::UpdateChecker>();
 	}
 
 	{
@@ -204,31 +171,56 @@ int Sandbox::start() {
 	});
 
 	LOG(("Connecting local socket to %1...").arg(_localServerName));
-#ifdef Q_OS_WIN
-	if (_uninstallLifecycle) {
-		_uninstallIpcTimer.callOnce(kUninstallIpcTimeout);
-	}
-#endif // Q_OS_WIN
 	_localSocket.connectToServer(_localServerName);
-
-#ifdef Q_OS_WIN
-	if (_uninstallExitCode >= 0) {
-		closeApplication();
-		return _uninstallExitCode;
-	}
-#endif // Q_OS_WIN
 
 	if (QuitOnStartRequested) {
 		closeApplication();
 		return 0;
 	}
 	_started = true;
-#ifdef Q_OS_WIN
-	if (_uninstallLifecycle) {
-		_uninstallEventLoopStarted = true;
-	}
-#endif // Q_OS_WIN
 	return exec();
+}
+
+int Sandbox::stopRunningInstance() {
+	LOG(("Cleanup: connecting to %1...").arg(_localServerName));
+	_localSocket.connectToServer(_localServerName);
+	if (!_localSocket.waitForConnected(int(kCleanupIpcTimeout))) {
+		if (_localSocket.error() == QLocalSocket::ServerNotFoundError) {
+			LOG(("Cleanup: no running instance found."));
+			return 0;
+		}
+		LOG(("Cleanup: connect error %1.").arg(_localSocket.error()));
+		return 1;
+	}
+	_localSocket.write("CMD:quit;");
+	if (!_localSocket.waitForBytesWritten(int(kCleanupIpcTimeout))) {
+		LOG(("Cleanup: could not send the quit command."));
+		return 1;
+	}
+	auto response = QByteArray();
+	const auto deadline = crl::now() + kCleanupIpcTimeout;
+	while (!response.contains(';')) {
+		const auto timeout = deadline - crl::now();
+		if (timeout <= 0 || !_localSocket.waitForReadyRead(int(timeout))) {
+			LOG(("Cleanup: no response to the quit command."));
+			return 1;
+		}
+		response.append(_localSocket.readAll());
+	}
+	const auto match = QRegularExpression(u"RES:(\\d+)_(\\d+);"_q).match(
+		QString::fromLatin1(response));
+	if (!match.hasMatch()) {
+		LOG(("Cleanup: bad response to the quit command."));
+		return 1;
+	}
+	const auto processId = match.capturedView(1).toULongLong();
+	LOG(("Cleanup: waiting for process %1 to quit...").arg(processId));
+	if (!Platform::WaitForProcessExit(processId, kCleanupQuitTimeout)) {
+		LOG(("Cleanup: the process did not quit in time."));
+		return 1;
+	}
+	LOG(("Cleanup: the running instance quit."));
+	return 0;
 }
 
 void Sandbox::NotifySystemShuttingDown() {
@@ -355,14 +347,6 @@ void Sandbox::socketConnected() {
 	LOG(("Socket connected, this is not the first application instance, sending show command..."));
 	_secondInstance = true;
 
-#ifdef Q_OS_WIN
-	if (_uninstallLifecycle) {
-		_uninstallLifecycle->connected();
-		finishUninstall();
-		return;
-	}
-#endif // Q_OS_WIN
-
 	QString commands;
 	if (qEnvironmentVariableIsSet("XDG_ACTIVATION_TOKEN")) {
 		commands += u"XDG_ACTIVATION_TOKEN:"_q + qgetenv("XDG_ACTIVATION_TOKEN").toBase64() + ';';
@@ -392,17 +376,6 @@ void Sandbox::socketWritten(qint64/* bytes*/) {
 }
 
 void Sandbox::socketReading() {
-#ifdef Q_OS_WIN
-	if (_uninstallLifecycle) {
-		const auto data = _localSocket.readAll();
-		_uninstallLifecycle->consumeResponse(std::string_view(
-			data.constData(),
-			static_cast<std::size_t>(data.size())));
-		finishUninstall();
-		return;
-	}
-#endif // Q_OS_WIN
-
 	if (_localSocket.state() != QLocalSocket::ConnectedState) {
 		LOG(("Socket is not connected %1").arg(_localSocket.state()));
 		return;
@@ -426,19 +399,6 @@ void Sandbox::socketReading() {
 }
 
 void Sandbox::socketError(QLocalSocket::LocalSocketError e) {
-#ifdef Q_OS_WIN
-	if (_uninstallLifecycle) {
-		if (!_secondInstance
-			&& e == QLocalSocket::ServerNotFoundError) {
-			_uninstallLifecycle->noInstance();
-		} else {
-			_uninstallLifecycle->socketFailure();
-		}
-		finishUninstall();
-		return;
-	}
-#endif // Q_OS_WIN
-
 	if (Quitting()) return;
 
 	if (_secondInstance) {
@@ -519,35 +479,11 @@ void Sandbox::singleInstanceChecked() {
 }
 
 void Sandbox::socketDisconnected() {
-#ifdef Q_OS_WIN
-	if (_uninstallLifecycle) {
-		_uninstallLifecycle->disconnected();
-		finishUninstall();
-		return;
-	}
-#endif // Q_OS_WIN
-
 	if (_secondInstance) {
 		DEBUG_LOG(("Sandbox Error: socket disconnected before command response received, quitting..."));
 		return Quit();
 	}
 }
-
-#ifdef Q_OS_WIN
-void Sandbox::finishUninstall() {
-	if (!_uninstallLifecycle
-		|| !_uninstallLifecycle->finished()
-		|| _uninstallExitCode >= 0) {
-		return;
-	}
-	_uninstallIpcTimer.cancel();
-	_uninstallExitCode = Uninstall::ExitCode(
-		_uninstallLifecycle->result());
-	if (_uninstallEventLoopStarted) {
-		QCoreApplication::exit(_uninstallExitCode);
-	}
-}
-#endif // Q_OS_WIN
 
 void Sandbox::newInstanceConnected() {
 	DEBUG_LOG(("Sandbox Info: new local socket connected"));
