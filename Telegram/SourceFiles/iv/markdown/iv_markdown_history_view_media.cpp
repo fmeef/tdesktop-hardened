@@ -301,6 +301,16 @@ public:
 
 	[[nodiscard]] MediaActivation activationAt(QPoint point) const override;
 
+	void clickHandlerActiveChanged(
+		const ClickHandlerPtr &handler,
+		bool active) override;
+
+	void clickHandlerPressedChanged(
+		const ClickHandlerPtr &handler,
+		bool pressed) override;
+
+	void updatePressed(QPoint point) override;
+
 	[[nodiscard]] MediaBlockSelectionData selectionData() const override;
 
 	[[nodiscard]] bool hasHeavyPart() const override;
@@ -313,6 +323,9 @@ public:
 
 private:
 	[[nodiscard]] bool alive() const override;
+
+	[[nodiscard]] bool acceptsVoiceSeekHandler(
+		const ClickHandlerPtr &handler) const;
 
 	[[nodiscard]] IvHistoryViewHit resolveHit(QPoint point) const;
 
@@ -458,6 +471,28 @@ MediaActivation IvHistoryViewBlock::activationAt(QPoint point) const {
 	return resolveHit(point).activation;
 }
 
+void IvHistoryViewBlock::clickHandlerActiveChanged(
+		const ClickHandlerPtr &handler,
+		bool active) {
+	if (acceptsVoiceSeekHandler(handler)) {
+		_media->clickHandlerActiveChanged(handler, active);
+	}
+}
+
+void IvHistoryViewBlock::clickHandlerPressedChanged(
+		const ClickHandlerPtr &handler,
+		bool pressed) {
+	if (acceptsVoiceSeekHandler(handler)) {
+		_media->clickHandlerPressedChanged(handler, pressed);
+	}
+}
+
+void IvHistoryViewBlock::updatePressed(QPoint point) {
+	if (acceptsVoiceSeekHandler(ClickHandler::getPressed())) {
+		_media->updatePressed(point - _geometry.topLeft());
+	}
+}
+
 MediaBlockSelectionData IvHistoryViewBlock::selectionData() const {
 	return {
 		.copyText = _copyText,
@@ -504,6 +539,15 @@ std::vector<QRect> IvHistoryViewBlock::itemRects() const {
 			grouped->groupItemRect(i).translated(_geometry.topLeft()));
 	}
 	return result;
+}
+
+bool IvHistoryViewBlock::acceptsVoiceSeekHandler(
+		const ClickHandlerPtr &handler) const {
+	return _supported
+		&& _media
+		&& alive()
+		&& (_kind == IvHistoryViewMediaKind::DocumentRow)
+		&& std::dynamic_pointer_cast<VoiceSeekClickHandler>(handler);
 }
 
 IvHistoryViewHit IvHistoryViewBlock::resolveHit(QPoint point) const {
@@ -622,7 +666,7 @@ IvHistoryViewHit IvHistoryViewBlock::classifyHandler(
 		result.link = handler;
 		return result;
 	}
-	if (_kind == IvHistoryViewMediaKind::Audio
+	if (_kind == IvHistoryViewMediaKind::DocumentRow
 		&& std::dynamic_pointer_cast<DocumentOpenClickHandler>(handler)) {
 		result.link = handler;
 		return result;
@@ -664,7 +708,7 @@ bool IvHistoryViewBlock::probeSupport() {
 	case IvHistoryViewMediaKind::GroupedMedia:
 		return supportsHitClassification();
 	case IvHistoryViewMediaKind::Map:
-	case IvHistoryViewMediaKind::Audio:
+	case IvHistoryViewMediaKind::DocumentRow:
 		return true;
 	}
 	return false;
@@ -2020,13 +2064,13 @@ IvHistoryViewMediaBlockFactory::IvHistoryViewMediaBlockFactory(
 	base::weak_ptr<Window::SessionController> controller,
 	PhotoFactory createPhoto,
 	VideoFactory createVideo,
-	AudioFactory createAudio,
+	DocumentBlockFactory createDocument,
 	MapFactory createMap,
 	GroupedMediaFactory createGroupedMedia)
 : _controller(std::move(controller))
 , _createPhoto(std::move(createPhoto))
 , _createVideo(std::move(createVideo))
-, _createAudio(std::move(createAudio))
+, _createDocument(std::move(createDocument))
 , _createMap(std::move(createMap))
 , _createGroupedMedia(std::move(createGroupedMedia)) {
 }
@@ -2041,9 +2085,9 @@ std::shared_ptr<MediaBlock> IvHistoryViewMediaBlockFactory::createVideo(
 	return create(prepared, _createVideo);
 }
 
-std::shared_ptr<MediaBlock> IvHistoryViewMediaBlockFactory::createAudio(
-		const PreparedAudioBlockData &prepared) const {
-	return create(prepared, _createAudio);
+std::shared_ptr<MediaBlock> IvHistoryViewMediaBlockFactory::createDocument(
+		const PreparedDocumentBlockData &prepared) const {
+	return create(prepared, _createDocument);
 }
 
 std::shared_ptr<MediaBlock> IvHistoryViewMediaBlockFactory::createMap(
