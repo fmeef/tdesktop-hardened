@@ -77,6 +77,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_chat_helpers.h"
 #include "styles/style_layers.h"
 #include "styles/style_settings.h"
+#include "styles/style_media_player.h"
 #include "styles/style_menu_icons.h"
 #include "core/core_settings.h"
 #include "core/application.h"
@@ -1409,7 +1410,8 @@ void SendFilesBox::pushBlock(int from, int till) {
 			Editor::OpenWithPreparedVideoFile(
 				this,
 				show,
-				&_list.files[index],
+				&_list,
+				index,
 				st::sendMediaPreviewSize,
 				std::move(done),
 				PhotoSideLimit(true));
@@ -1709,12 +1711,12 @@ void SendFilesBox::pushBlock(int from, int till) {
 				});
 			};
 			const auto add = [&](const QString &label, crl::time value) {
-				Menu::AddCheckedAction(
-					submenu.get(),
+				submenu->addAction(
 					label,
 					[=] { choose(value); },
-					nullptr,
-					(current == value));
+					((current == value)
+						? &st::mediaPlayerMenuCheck
+						: nullptr));
 			};
 			add(tr::lng_ttl_period_once(tr::now), Data::kTimeToLiveSingleView);
 			add(tr::lng_seconds(tr::now, lt_count, 3), 3);
@@ -1755,8 +1757,7 @@ void SendFilesBox::pushBlock(int from, int till) {
 					});
 				}));
 			});
-			Menu::AddCheckedAction(
-				submenu.get(),
+			submenu->addAction(
 				(custom
 					? tr::lng_ttl_period_custom_value(
 						tr::now,
@@ -1764,8 +1765,7 @@ void SendFilesBox::pushBlock(int from, int till) {
 						tr::lng_seconds_tiny(tr::now, lt_count, current))
 					: tr::lng_ttl_period_custom(tr::now)),
 				chooseCustom,
-				nullptr,
-				custom);
+				(custom ? &st::mediaPlayerMenuCheck : nullptr));
 			submenu->addSeparator();
 			submenu->addAction(base::make_unique_q<Ui::Menu::MultilineAction>(
 				submenu->menu(),

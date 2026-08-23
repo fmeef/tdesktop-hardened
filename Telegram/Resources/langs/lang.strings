@@ -690,6 +690,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_restore_windows_never" = "Never";
 "lng_restore_windows_enabled_toast" = "Windows will now restore on launch. You can disable this in Settings > Advanced.";
 "lng_restore_windows_disabled_toast" = "Windows will not be restored. You can enable this in Settings > Advanced.";
+"lng_restore_windows_unavailable" = "This chat is no longer available.";
 "lng_settings_open_system_settings" = "Open Settings";
 "lng_settings_add_sendto" = "Place Telegram in \"Send to\" menu";
 "lng_settings_mac_warn_before_quit" = "Show warning before quitting with {text}";
@@ -2591,6 +2592,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_action_user_joined_by_request" = "{from} was accepted to the group";
 "lng_action_you_joined_by_request" = "Your request to join the group was approved";
 "lng_action_you_joined_by_request_channel" = "Your request to join the channel was approved";
+"lng_action_user_joined_via_community" = "{from} joined the group via the {community} community";
+"lng_action_user_joined_via_community_unknown" = "{from} joined the group via a community";
 "lng_action_user_registered" = "{from} joined Telegram";
 "lng_action_removed_photo" = "{from} removed group photo";
 "lng_action_removed_photo_channel" = "Channel photo removed";
