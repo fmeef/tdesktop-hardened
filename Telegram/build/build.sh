@@ -50,12 +50,64 @@ else
   AlphaBetaParam='-beta'
 fi
 
+# TDESKTOP_UPDATE_V2=1 switches the update packaging to the v2 signed
+# envelope (2-of-2: the local Ed25519 release key plus the cloud ES256
+# key through an interactive az login) and every artifact to the v2
+# names: td-update-{os}-{arch}-{version}[-beta] and
+# td-(setup|portable)-{os}[-{arch}]-{version_str}[-beta].{ext}. Without the
+# switch the classical v1 update and the classical names are built, so
+# the stepping-stone releases keep coming out exactly as before.
+if [ "$TDESKTOP_UPDATE_V2" == "1" ]; then
+  if [ "$AlphaVersion" != "0" ]; then
+    Error "The v2 update format has no alpha channel."
+  fi
+  case "$AppVersionStr" in
+    *.*.*) ;;
+    *) Error "AppVersionStr '$AppVersionStr' must have three components for the v2 names." ;;
+  esac
+  UpdateChannel="stable"
+  V2Suffix=""
+  if [ "$BetaChannel" != "0" ]; then
+    UpdateChannel="beta"
+    V2Suffix="-beta"
+  fi
+  UpdateKeysLoc="$FullScriptPath/../Resources/update"
+  ReleaseLocalKey="${TDESKTOP_RELEASE_LOCAL_KEY:-$FullScriptPath/../../../DesktopPrivate/release-local.pem}"
+  ReleaseLocalKeyId="${TDESKTOP_RELEASE_LOCAL_KEY_ID:-rl-2026a}"
+  ReleaseCloudVault="${TDESKTOP_RELEASE_KEYVAULT:-tdesktop-release-kv}"
+  ReleaseCloudKeyId="${TDESKTOP_RELEASE_CLOUD_KEY_ID:-rc-2026a}"
+fi
+
+PackUpdate() {
+  if [ "$TDESKTOP_UPDATE_V2" == "1" ]; then
+    "./Packer" "$@" -version $VersionForPacker -channel $UpdateChannel \
+      -keys-loc "$UpdateKeysLoc" -emit-signing-input signing-input.bin
+    python3 "$FullScriptPath/sign_update.py" \
+      --input signing-input.bin \
+      --output release-cloud.sig \
+      --az-vault "$ReleaseCloudVault" \
+      --az-key "$ReleaseCloudKeyId"
+    "./Packer" -channel $UpdateChannel -keys-loc "$UpdateKeysLoc" \
+      -unsigned "$UpdateFile.unsigned" \
+      -embed-signatures "$ReleaseCloudKeyId:release-cloud.sig" \
+      -local-key "$ReleaseLocalKey" \
+      -local-key-id "$ReleaseLocalKeyId"
+    rm signing-input.bin release-cloud.sig "$UpdateFile.unsigned"
+  else
+    "./Packer" "$@" -version $VersionForPacker $AlphaBetaParam
+  fi
+}
+
 echo ""
 HomePath="$FullScriptPath/.."
 if [ "$BuildTarget" == "linux" ]; then
   echo "Building version $AppVersionStrFull for Linux 64bit.."
   UpdateFile="tlinuxupd$AppVersion"
   SetupFile="tsetup.$AppVersionStrFull.tar.xz"
+  if [ "$TDESKTOP_UPDATE_V2" == "1" ]; then
+    UpdateFile="td-update-linux-x64-$AppVersion$V2Suffix"
+    SetupFile="td-setup-linux-x64-$AppVersionStr$V2Suffix.tar.xz"
+  fi
   ProjectPath="$HomePath/../out"
   ReleasePath="$ProjectPath/Release"
   BinaryName="Telegram"
@@ -84,6 +136,10 @@ elif [ "$BuildTarget" == "mac" ] ; then
   fi
   UpdateFileAMD64="tmacupd$AppVersion"
   UpdateFileARM64="tarmacupd$AppVersion"
+  if [ "$TDESKTOP_UPDATE_V2" == "1" ]; then
+    UpdateFileAMD64="td-update-mac-x64-$AppVersion$V2Suffix"
+    UpdateFileARM64="td-update-mac-arm-$AppVersion$V2Suffix"
+  fi
   if [ "$MacArch" == "arm64" ]; then
     UpdateFile="$UpdateFileARM64"
   elif [ "$MacArch" == "x86_64" ]; then
@@ -95,9 +151,19 @@ elif [ "$BuildTarget" == "mac" ] ; then
   if [ "$MacArch" != "" ]; then
     BundleName="$BinaryName.$MacArch.app"
     SetupFile="tsetup.$MacArch.$AppVersionStrFull.dmg"
+    if [ "$TDESKTOP_UPDATE_V2" == "1" ]; then
+      if [ "$MacArch" == "arm64" ]; then
+        SetupFile="td-setup-mac-arm-$AppVersionStr$V2Suffix.dmg"
+      else
+        SetupFile="td-setup-mac-x64-$AppVersionStr$V2Suffix.dmg"
+      fi
+    fi
   else
     BundleName="$BinaryName.app"
     SetupFile="tsetup.$AppVersionStrFull.dmg"
+    if [ "$TDESKTOP_UPDATE_V2" == "1" ]; then
+      SetupFile="td-setup-mac-$AppVersionStr$V2Suffix.dmg"
+    fi
   fi
 elif [ "$BuildTarget" == "macstore" ]; then
   if [ "$AlphaVersion" != "0" ]; then
@@ -172,7 +238,7 @@ if [ "$BuildTarget" == "linux" ]; then
 
   echo "Preparing version $AppVersionStrFull, executing Packer.."
   cd "$ReleasePath"
-  "./Packer" -path "$BinaryName" -path Updater -version $VersionForPacker $AlphaBetaParam
+  PackUpdate -path "$BinaryName" -path Updater
   echo "Packer done!"
 
   if [ "$AlphaVersion" != "0" ]; then
@@ -430,7 +496,7 @@ if [ "$BuildTarget" == "mac" ] || [ "$BuildTarget" == "macstore" ]; then
       mv "$ReleasePath/$BundleName" "$UpdatePackPath/$BinaryName.app"
       cp "$ReleasePath/Packer" "$UpdatePackPath/"
       cd "$UpdatePackPath"
-      "./Packer" -path "$BinaryName.app" -target "$BuildTarget" -version $VersionForPacker -arch $MacArch $AlphaBetaParam
+      PackUpdate -path "$BinaryName.app" -target "$BuildTarget" -arch $MacArch
       echo "Packer done!"
       mv "$UpdateFile" "$ReleasePath/"
       cd "$ReleasePath"
