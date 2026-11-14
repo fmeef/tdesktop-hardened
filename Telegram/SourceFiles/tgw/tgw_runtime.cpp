@@ -36,6 +36,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "twidget/widget_host.h"
 #include "ui/style/style_core_scale.h"
 #include "wallet/wallet_panel.h"
+#include "core/application.h"
+#include "core/core_settings.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QtCore/QStringDecoder>
@@ -709,7 +711,7 @@ bool Runtime::IsExitPrevent(Fn<void()> retry) {
 
 void Runtime::StateChanged(
 		const base::flat_set<not_null<HistoryItem*>> &items) {
-	if (items.empty()) {
+	if (items.empty() || Core::App().settings().disableWidgets()) {
 		return;
 	}
 	for (const auto &runtime : Runtimes().list) {
@@ -764,7 +766,7 @@ bool Runtime::heavy() const {
 }
 
 bool Runtime::stopped() const {
-	return (_state == State::Stopped);
+	return (_state == State::Stopped) || Core::App().settings().disableWidgets();
 }
 
 std::optional<int> Runtime::height() const {
@@ -809,12 +811,16 @@ void Runtime::attachView(
 	if (stopped()) {
 		release();
 	}
-	PostCheck();
-	syncHostData();
-	if (_host && _host->watching) {
-		WatchersChanged();
-	}
-	StoreMemory(_item, *_memory);
+    if (!Core::App().settings().disableWidgets()) {
+        PostCheck();
+
+        syncHostData();
+        
+        if (_host && _host->watching) {
+            WatchersChanged();
+        }
+    }
+    StoreMemory(_item, *_memory);
 }
 
 void Runtime::setSize(int width, double maxHeight) {

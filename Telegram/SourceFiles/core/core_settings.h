@@ -1067,8 +1067,17 @@ public:
         return _hideAllLottie.current();
     }
     
+    
+    bool disableWidgets() const {
+        return _disableWidgets.current();
+    }
+    
     rpl::producer<bool> hideAllLottieValue() const {
         return _hideAllLottie.value();
+    }
+    
+    rpl::producer<bool> disableWidgetsValue() const {
+        return _disableWidgets.value();
     }
 
 private:
@@ -1237,6 +1246,8 @@ private:
     rpl::variable<bool> _hideAnimatedStickers = false;
     
     rpl::variable<bool> _hideAllLottie = true;
+    
+    rpl::variable<bool> _disableWidgets = true;
 
 };
 

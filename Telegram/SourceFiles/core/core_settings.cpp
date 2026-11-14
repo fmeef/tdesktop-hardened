@@ -406,6 +406,7 @@ QByteArray Settings::serialize() const {
 
 	size += sizeof(qint32); // _hideAnimatedStickers
     size += sizeof(qint32); // _hideAllLottie
+    size += sizeof(qint32); // _disableWidgets
 	
 	size += sizeof(qint32) // _audioPlaybackSpeed
 		+ sizeof(qint32) // _mediaGridZoomStep
@@ -599,6 +600,7 @@ QByteArray Settings::serialize() const {
 		stream << qint32(_mediaGridZoomStep);
 		stream << qint32(_pullToNextChannel.current() ? 1 : 0);
 		stream << qint32(_chatFiltersTabsMode.current());
+        stream << qint32(_disableWidgets.current()? 1 : 0);
 
 		stream << kLanguageCodesFormat;
 		stream << qint32(skipTranslationLanguageCodes.size());
@@ -752,12 +754,13 @@ void Settings::addFromSerialized(
 	qint32 usePlatformTranslation = _usePlatformTranslation ? 1 : 0;
 	qint32 systemTextReplace = _systemTextReplace.current() ? 1 : 0;
 
-  qint32 hideAnimatedStickers = _hideAnimatedStickers.current() ? 1 : 0;
-  qint32 hideAllLottie = _hideAllLottie.current() ? 1 : 0;
+    qint32 hideAnimatedStickers = _hideAnimatedStickers.current() ? 1 : 0;
+    qint32 hideAllLottie = _hideAllLottie.current() ? 1 : 0;
 
 	qint32 languageCodesFormat = 0;
 	QStringList skipTranslationLanguageCodes;
 	QString translateToCode;
+    qint32 disableWidgets = _disableWidgets.current() ? 1 : 0;
 
 
 	stream >> themesAccentColors;
@@ -1203,6 +1206,10 @@ void Settings::addFromSerialized(
 			}
 		}
 	}
+    
+    if (!stream.atEnd()) {
+        stream >> disableWidgets;
+    }
 
 	if (stream.status() != QDataStream::Ok) {
 		LOG(("App Error: "
@@ -1514,6 +1521,7 @@ void Settings::addFromSerialized(
 	_notificationsVolume = notificationsVolume;
     _hideAnimatedStickers = (hideAnimatedStickers == 1);
     _hideAllLottie = (hideAllLottie == 1);
+    _disableWidgets = (disableWidgets == 1);
 }
 
 void Settings::clearPref(std::string_view key) {
