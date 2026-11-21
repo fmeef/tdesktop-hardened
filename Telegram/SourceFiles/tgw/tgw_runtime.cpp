@@ -1298,7 +1298,8 @@ bool Runtime::startable() const {
 		&& currentContent()
 		&& !crashedOut()
 		&& !Runtimes().draining
-		&& !Core::Quitting();
+        && !Core::Quitting();
+       // && !Core::App().settings().disableWidgets();
 }
 
 bool Runtime::wantsStart() const {
@@ -1419,6 +1420,9 @@ void Runtime::construct(
 	auto storage = OpenStorageHost(_item);
 	const auto id = storage.id;
 	StorageHostVisibility(id, _hostVisible);
+//    if (Core::App().settings().disableWidgets()) {
+//        return;
+//    }
 	auto job = Job{
 		.html = _html,
 		.resources = std::move(resources),
@@ -1427,12 +1431,12 @@ void Runtime::construct(
 		.factory = Test::TapWidgetRenderer(
 			_item->globalId(),
 			_live->hostFactory()),
-		.action = _live->hostActionHandler(),
-		.request = _live->hostRequestHandler(),
-		.wallet = _live->hostWalletHandler(),
-		.copy = _live->hostCopyHandler(),
-		.watch = _live->hostWatchHandler(),
-		.storage = std::move(storage.commit),
+//		.action = _live->hostActionHandler(),
+//		.request = _live->hostRequestHandler(),
+//		.wallet = _live->hostWalletHandler(),
+//		.copy = _live->hostCopyHandler(),
+//		.watch = _live->hostWatchHandler(),
+//		.storage = std::move(storage.commit),
 		.options = Test::OverrideWidgetHostOptions(
 			_item->globalId(),
 			std::move(options)),
